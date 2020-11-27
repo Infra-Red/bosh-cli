@@ -69,7 +69,7 @@ func (cfg CertificateGenerator) bigIntHash(n *big.Int) []byte {
 func (cfg CertificateGenerator) generateCertificate(cParams certParams) (CertResponse, error) {
 	var certResponse CertResponse
 
-	privateKey, err := rsa.GenerateKey(rand.Reader, 3072)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return certResponse, errors.WrapError(err, "Generating Key")
 	}
@@ -97,7 +97,7 @@ func (cfg CertificateGenerator) generateCertificate(cParams certParams) (CertRes
 	certTemplate.SubjectKeyId = cfg.bigIntHash(privateKey.N)
 
 	if cParams.IsCA {
-		certTemplate.KeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
+		// certTemplate.KeyUsage = x509.KeyUsageCertSign | x509.KeyUsageCRLSign
 
 		signingKey := privateKey
 		signingCA := &certTemplate
@@ -122,7 +122,7 @@ func (cfg CertificateGenerator) generateCertificate(cParams certParams) (CertRes
 		if cParams.CAName == "" {
 			return certResponse, errors.Error("Missing required CA name")
 		}
-		certTemplate.KeyUsage = x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature
+		// certTemplate.KeyUsage = x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature
 
 		certTemplate.AuthorityKeyId = rootCA.SubjectKeyId
 
@@ -178,23 +178,30 @@ func generateCertTemplate(cParams certParams) (x509.Certificate, error) {
 	}
 
 	var organizations []string
-	if cParams.Organization == "" {
-		organizations = []string{"Cloud Foundry"}
-	} else {
-		organizations = []string{cParams.Organization}
+	if cParams.IsCA {
+		if cParams.Organization == "" {
+			organizations = []string{"Cloud Foundry"}
+		} else {
+			organizations = []string{cParams.Organization}
+		}
 	}
 
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Country:      []string{"USA"},
-			Organization: organizations,
-			CommonName:   cParams.CommonName,
+			// Country:      []string{"USA"},
+			// Organization: organizations,
+			CommonName: cParams.CommonName,
 		},
 		NotBefore:             now,
 		NotAfter:              notAfter,
 		BasicConstraintsValid: true,
 		IsCA:                  cParams.IsCA,
+	}
+
+	if cParams.IsCA {
+		template.Subject.Country = []string{"USA"}
+		template.Subject.Organization = organizations
 	}
 	return template, nil
 }
