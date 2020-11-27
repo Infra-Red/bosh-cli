@@ -177,14 +177,14 @@ func generateCertTemplate(cParams certParams) (x509.Certificate, error) {
 		notAfter = now.Add(time.Duration(cParams.Duration*24) * time.Hour)
 	}
 
-	var organizations []string
-	if cParams.IsCA {
-		if cParams.Organization == "" {
-			organizations = []string{"Cloud Foundry"}
-		} else {
-			organizations = []string{cParams.Organization}
-		}
-	}
+	// var organizations []string
+	// if cParams.IsCA {
+	// 	if cParams.Organization == "" {
+	// 		organizations = []string{"Cloud Foundry"}
+	// 	} else {
+	// 		organizations = []string{cParams.Organization}
+	// 	}
+	// }
 
 	template := x509.Certificate{
 		SerialNumber: serialNumber,
@@ -199,10 +199,10 @@ func generateCertTemplate(cParams certParams) (x509.Certificate, error) {
 		IsCA:                  cParams.IsCA,
 	}
 
-	if cParams.IsCA {
-		template.Subject.Country = []string{"USA"}
-		template.Subject.Organization = organizations
-	}
+	// if cParams.IsCA {
+	// 	template.Subject.Country = []string{"USA"}
+	// 	template.Subject.Organization = organizations
+	// }
 	return template, nil
 }
 
